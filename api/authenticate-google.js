@@ -25,7 +25,7 @@ exports.handler = async event => {
     let data = await cognitoIdentity.getId(params).promise();
 
     params = {
-      IdentityID: data.IdentityID,
+      IdentityId: data.IdentityId,
       Logins: {
         "accounts.google.com": id_token
       }
