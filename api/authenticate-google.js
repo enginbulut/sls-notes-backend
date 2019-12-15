@@ -9,7 +9,7 @@ const jwtDecode = require("jwt-decode");
 const util = require("./util.js");
 
 const cognitoIdentity = new AWS.CognitoIdentity();
-const idetityPoolId = process.ENV.COGNITO_IDENTITY_POOL_ID;
+const idetityPoolId = process.env.COGNITO_IDENTITY_POOL_ID;
 
 exports.handler = async event => {
   try {
