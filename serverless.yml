@@ -27,6 +27,7 @@ provider:
   endpointType: regional
   environment:
     NOTES_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    COGNITO_IDENTITY_POOL_ID: us-east-1:91c92a2f-244a-4e43-b4a0-1e7bb72cd69f
   iamRoleStatements:
     - Effect: Allow
       Action: 
@@ -36,6 +37,17 @@ provider:
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.NOTES_TABLE}"
 
 functions:
+  authenticate-google:
+    handler: api/authenticate-google.handler
+    description: Google IDP Authentication
+    events:
+      - http:
+          path: auth
+          method: get
+          cors:
+            origin: '*'
+            headers: ${self:custom.allowedHeaders}
+
   add-note:
     handler: api/add-note.handler
     description: POST /note
@@ -43,6 +55,7 @@ functions:
       - http:
           path: note
           method: post
+          authorizer: aws_iam
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -54,6 +67,7 @@ functions:
       - http:
           path: note
           method: patch
+          authorizer: aws_iam
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -65,6 +79,7 @@ functions:
       - http:
           path: notes
           method: get
+          authorizer: aws_iam
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -76,6 +91,7 @@ functions:
       - http:
           path: note/n/{note_id}
           method: get
+          authorizer: aws_iam
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -87,6 +103,7 @@ functions:
       - http:
           path: note/t/{timestamp}
           method: delete
+          authorizer: aws_iam
           cors:
             origin: '*'
             headers: ${self:custom.allowedHeaders}
@@ -123,3 +140,13 @@ resources:
             ProvisionedThroughput:
               ReadCapacityUnits: 1
               WriteCapacityUnits: 1
+  
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: '*'
+          gatewayresponse.header.Access-Control-Allow-Headers: '*'
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
